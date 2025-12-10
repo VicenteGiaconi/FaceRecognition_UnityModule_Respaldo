@@ -10,10 +10,10 @@
 [Aa]ssets/[Vv]ideos/*
 [Aa]ssets/[Ss]treaming[Aa]ssets
 [Aa]ssets/[Ss]treaming[Aa]ssets/*
-[Aa]ssets/[Tt]extures
-[Aa]ssets/[Tt]extures/*
-[Aa]ssets/[Mm]aterials
-[Aa]ssets/[Mm]aterials/*
+# [Aa]ssets/[Tt]extures
+# [Aa]ssets/[Tt]extures/*
+# [Aa]ssets/[Mm]aterials
+# [Aa]ssets/[Mm]aterials/*
 *.csproj
 *.unityproj
 *.sln

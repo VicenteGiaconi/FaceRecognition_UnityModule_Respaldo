@@ -1,0 +1,10 @@
+# ninja log v5
+2	2301	1765306891608416599	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	a784f0c8a35e3c49
+1	2573	1765306891872560255	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	75f45ddc69c655d5
+1	2692	1765306891993692027	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	79043ef5802ab3b6
+3	2778	1765306892063679580	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	7f52bceefc82225f
+1	2827	1765306892129772379	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	1870c1e9c21a4b16
+5	3213	1765306892516099406	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	6e453c556de6d99
+2	3574	1765306892872048887	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	9ce8f8153acf66bb
+0	3657	1765306892965961485	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	c54e9118bce18ba8
+3657	3712	1765306893031670241	/home/vgiac/PT/FaceRecognition_UnityModule_Respaldo/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5gj4964c/obj/arm64-v8a/libgame.so	bf11c029a3385986
