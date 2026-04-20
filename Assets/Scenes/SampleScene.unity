@@ -260,8 +260,8 @@ GameObject:
   - component: {fileID: 24884540}
   - component: {fileID: 24884539}
   - component: {fileID: 24884538}
-  - component: {fileID: 24884543}
-  - component: {fileID: 24884544}
+  - component: {fileID: 24884547}
+  - component: {fileID: 24884546}
   m_Layer: 0
   m_Name: Video360
   m_TagString: Untagged
@@ -394,7 +394,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &24884543
+--- !u!114 &24884546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 24884537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb1d3257646f230d89d67493061e0825, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  videoPlayer: {fileID: 0}
+  knownVideos:
+  - valdivia_360_quest.mp4
+  - AK_video_2.mp4
+  autoPlayFirst: 1
+--- !u!114 &24884547
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -406,27 +423,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5673e009746f8e84283fd2581d7a4f15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoFileName: AK_video.mp4
+  videoFileName: VALDIVIA1_video.mp4
   autoPlay: 1
   volume: 1
   playPauseButton: 1
   restartButton: 2
---- !u!114 &24884544
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24884537}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22da3bb4f08a40f4697444b9ffffa7c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serverIP: 10.33.8.66
-  videoControlPort: 8766
-  videoPlayer: {fileID: 24884538}
-  videoManager: {fileID: 24884543}
 --- !u!1 &45446114
 GameObject:
   m_ObjectHideFlags: 0
@@ -1063,8 +1064,8 @@ GameObject:
   - component: {fileID: 1090165259}
   - component: {fileID: 1090165258}
   - component: {fileID: 1090165257}
-  - component: {fileID: 1090165256}
-  - component: {fileID: 1090165260}
+  - component: {fileID: 1090165261}
+  - component: {fileID: 1090165262}
   m_Layer: 0
   m_Name: FacialTrackingSystem
   m_TagString: Untagged
@@ -1087,26 +1088,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1090165256
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1090165254}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e610a184d1b35ce48be475c12e8ee53b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  facialCapture: {fileID: 0}
-  dataLogger: {fileID: 0}
-  realtimeTransmitter: {fileID: 0}
-  statusText: {fileID: 0}
-  startButton: {fileID: 0}
-  stopButton: {fileID: 0}
-  startRecordingButton: 1
-  stopRecordingButton: 2
 --- !u!114 &1090165257
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1121,6 +1102,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableRealtimeTransmission: 1
   logTag: FACIAL_DATA
+  minimumValueThreshold: 0.01
 --- !u!114 &1090165258
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1150,7 +1132,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fileName: facial_data
   useTimestampInFileName: 1
---- !u!114 &1090165260
+--- !u!114 &1090165261
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1159,11 +1141,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 1090165254}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
+  m_Script: {fileID: 11500000, guid: ab71cfc6b9fce2c799fcdcbf5f2ae52d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverIP: 10.33.8.182
-  serverPort: 8765
+  facialCapture: {fileID: 0}
+  dataLogger: {fileID: 0}
+  realtimeTransmitter: {fileID: 0}
+  statusText: {fileID: 0}
+  startButton: {fileID: 0}
+  stopButton: {fileID: 0}
+  startRecordingButton: 1
+  stopRecordingButton: 2
+--- !u!114 &1090165262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1090165254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6562f049e34a307395cd0bd5021d9af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pollInterval: 0.5
 --- !u!1 &1247203999
 GameObject:
   m_ObjectHideFlags: 0

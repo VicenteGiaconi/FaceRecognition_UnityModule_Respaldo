@@ -1,53 +1,57 @@
 using UnityEngine;
 using System.Text;
-using System;
 
+/// <summary>
+/// Transmite datos faciales en tiempo real via ADB logcat (cable USB).
+/// En el PC, filtra con: adb logcat -s FACIAL_DATA
+/// No requiere red ni WebSocket.
+/// </summary>
 public class RealtimeDataTransmitter : MonoBehaviour
 {
-    [Header("ConfiguraciÛn")]
+    [Header("Configuraci√≥n")]
     public bool enableRealtimeTransmission = true;
-    public string logTag = "FACIAL_DATA"; // Tag para identificar en logcat
 
-    private FacialExpressionCapture facialCapture;
+    [Tooltip("Tag usado para filtrar en logcat desde el PC")]
+    public string logTag = "FACIAL_DATA";
+
+    [Tooltip("Solo transmitir valores mayores a este umbral (reduce ruido)")]
+    [Range(0f, 0.1f)]
+    public float minimumValueThreshold = 0.01f;
+
     private bool isTransmitting = false;
-
-    void Start()
-    {
-        facialCapture = GetComponent<FacialExpressionCapture>();
-        if (facialCapture == null)
-        {
-            Debug.LogError("FacialExpressionCapture no encontrado");
-        }
-    }
 
     public void StartTransmission()
     {
         isTransmitting = true;
-        Debug.Log("TransmisiÛn en tiempo real iniciada");
+        // Se√±al de inicio de sesi√≥n para el receptor Python
+        Debug.Log($"[{logTag}]{{\"event\":\"START\",\"t\":{Time.time:F3}}}");
+        Debug.Log("Transmisi√≥n ADB iniciada");
     }
 
     public void StopTransmission()
     {
+        // Se√±al de fin de sesi√≥n para el receptor Python
+        Debug.Log($"[{logTag}]{{\"event\":\"STOP\",\"t\":{Time.time:F3}}}");
         isTransmitting = false;
-        Debug.Log("TransmisiÛn en tiempo real detenida");
+        Debug.Log("Transmisi√≥n ADB detenida");
     }
 
-    // Este mÈtodo ser· llamado desde FacialExpressionCapture
+    /// <summary>
+    /// Llamado desde FacialExpressionCapture cada frame capturado.
+    /// Emite JSON compacto con solo los valores activos (> threshold).
+    /// Formato: [FACIAL_DATA]{"t":1.234,"d":{"12":0.85,"13":0.90}}
+    /// </summary>
     public void TransmitFacialData(FacialExpressionCapture.FacialData data)
     {
         if (!isTransmitting || !enableRealtimeTransmission) return;
 
-        // Construir mensaje JSON compacto para transmisiÛn
         StringBuilder json = new StringBuilder();
-        json.Append("{");
-        json.Append("\"t\":").Append(data.timestamp.ToString("F3")).Append(",");
-        json.Append("\"d\":{");
+        json.Append("{\"t\":").Append(data.timestamp.ToString("F3")).Append(",\"d\":{");
 
         bool first = true;
         foreach (var kvp in data.expressions)
         {
-            // Solo transmitir valores significativos (>0.01) para reducir ancho de banda
-            if (kvp.Value > 0.01f)
+            if (kvp.Value > minimumValueThreshold)
             {
                 if (!first) json.Append(",");
                 json.Append("\"").Append((int)kvp.Key).Append("\":").Append(kvp.Value.ToString("F3"));
@@ -56,13 +60,8 @@ public class RealtimeDataTransmitter : MonoBehaviour
         }
 
         json.Append("}}");
-
-        // Enviar a logcat con tag especial para filtrado
-        Debug.Log($"[{logTag}]{json.ToString()}");
+        Debug.Log($"[{logTag}]{json}");
     }
 
-    public bool IsTransmitting()
-    {
-        return isTransmitting;
-    }
+    public bool IsTransmitting() => isTransmitting;
 }

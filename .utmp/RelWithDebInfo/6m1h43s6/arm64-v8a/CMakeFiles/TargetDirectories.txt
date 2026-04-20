@@ -1,5 +1,0 @@
-C:/Users/MBX/Desktop/PT_VicenteGiaconi_FreddyBacigalupo/FaceRecognition_UnityModule/.utmp/RelWithDebInfo/6m1h43s6/arm64-v8a/CMakeFiles/edit_cache.dir
-C:/Users/MBX/Desktop/PT_VicenteGiaconi_FreddyBacigalupo/FaceRecognition_UnityModule/.utmp/RelWithDebInfo/6m1h43s6/arm64-v8a/CMakeFiles/rebuild_cache.dir
-C:/Users/MBX/Desktop/PT_VicenteGiaconi_FreddyBacigalupo/FaceRecognition_UnityModule/.utmp/RelWithDebInfo/6m1h43s6/arm64-v8a/GameActivity/CMakeFiles/game.dir
-C:/Users/MBX/Desktop/PT_VicenteGiaconi_FreddyBacigalupo/FaceRecognition_UnityModule/.utmp/RelWithDebInfo/6m1h43s6/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
-C:/Users/MBX/Desktop/PT_VicenteGiaconi_FreddyBacigalupo/FaceRecognition_UnityModule/.utmp/RelWithDebInfo/6m1h43s6/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

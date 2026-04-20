@@ -29,6 +29,8 @@
 *.opendb
 *.VC.db
 
+.utmp/
+
 # IDEs
 .vs/
 .idea/
