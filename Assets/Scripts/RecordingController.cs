@@ -8,6 +8,7 @@ public class RecordingController : MonoBehaviour
     public FacialExpressionCapture facialCapture;
     public DataLogger dataLogger;
     public RealtimeDataTransmitter realtimeTransmitter;
+    public WebSocketSender webSocketSender;
 
     [Header("UI (opcional)")]
     public TextMeshProUGUI statusText;
@@ -28,6 +29,14 @@ public class RecordingController : MonoBehaviour
             dataLogger = FindFirstObjectByType<DataLogger>();
         if (realtimeTransmitter == null)
             realtimeTransmitter = FindFirstObjectByType<RealtimeDataTransmitter>();
+        if (webSocketSender == null)
+            webSocketSender = FindFirstObjectByType<WebSocketSender>();
+
+        if (webSocketSender != null)
+        {
+            webSocketSender.OnCommandReceived += HandleRemoteCommand;
+            webSocketSender.ConnectAsync();
+        }
 
         if (startButton != null) startButton.onClick.AddListener(StartRecording);
         if (stopButton != null)
@@ -72,6 +81,7 @@ public class RecordingController : MonoBehaviour
         dataLogger.StartLogging();
         facialCapture.StartCapture();
         realtimeTransmitter?.StartTransmission();
+        webSocketSender?.StartSession();
 
         isRecording = true;
 
@@ -89,6 +99,7 @@ public class RecordingController : MonoBehaviour
         facialCapture?.StopCapture();
         dataLogger?.StopLogging();
         realtimeTransmitter?.StopTransmission();
+        webSocketSender?.EndSessionAndSend();
 
         isRecording = false;
 
@@ -97,6 +108,20 @@ public class RecordingController : MonoBehaviour
 
         UpdateStatus("Grabación detenida.");
         Debug.Log("[RecCtrl] Grabación detenida.");
+    }
+
+    private void HandleRemoteCommand(string command)
+    {
+        if (command == "START_RECORDING" && !isRecording)
+        {
+            Debug.Log("[RecCtrl] Comando START_RECORDING recibido del backend.");
+            StartRecording();
+        }
+        else if (command == "STOP_RECORDING" && isRecording)
+        {
+            Debug.Log("[RecCtrl] Comando STOP_RECORDING recibido del backend.");
+            StopRecording();
+        }
     }
 
     void UpdateStatus(string message)
