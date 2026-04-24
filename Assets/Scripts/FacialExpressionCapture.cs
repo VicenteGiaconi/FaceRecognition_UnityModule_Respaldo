@@ -16,6 +16,7 @@ public class FacialExpressionCapture : MonoBehaviour
     private float nextCaptureTime = 0f;
     private DataLogger dataLogger;
     private RealtimeDataTransmitter realtimeTransmitter;
+    private WebSocketSender webSocketSender;
 
     [System.Serializable]
     public class FacialData
@@ -40,6 +41,7 @@ public class FacialExpressionCapture : MonoBehaviour
 
         dataLogger = GetComponent<DataLogger>();
         realtimeTransmitter = GetComponent<RealtimeDataTransmitter>();
+        webSocketSender = FindFirstObjectByType<WebSocketSender>();
 
         if (dataLogger == null)
             Debug.LogError("[FaceCapture] DataLogger no encontrado.");
@@ -77,6 +79,7 @@ public class FacialExpressionCapture : MonoBehaviour
 
         dataLogger?.LogFacialData(data);
         realtimeTransmitter?.TransmitFacialData(data);
+        webSocketSender?.RecordData(data);
     }
 
     public void StartCapture()
