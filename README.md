@@ -22,7 +22,7 @@ Assets/
     ├── DataLogger.cs                # Saves facial data to a timestamped CSV file on device
     ├── RealtimeDataTransmitter.cs   # Streams facial data via ADB logcat
     ├── WebSocketSender.cs           # WebSocket client — connects to backend, streams data, receives commands
-    ├── RecordingController.cs       # Orchestrates all modules; handles start/stop from backend or VR buttons
+    ├── RecordingController.cs       # Orchestrates all modules; handles start/stop from backend or UI buttons
     ├── VideoLibraryManager.cs       # Manages 360° video playlist
     ├── Video360Manager.cs           # Handles 360° video playback
     ├── ADBCommandReceiver.cs        # Receives video control commands from PC via ADB file polling
@@ -146,6 +146,17 @@ The browser console receives the full session summary:
 ```json
 {"type":"FACIAL_SUMMARY","metadata":{...},"statistics":{...},"rawData":[...]}
 ```
+
+## Video Playback Controls
+
+The 360° video **starts paused** when the app launches. It must be started manually using the Quest controller buttons:
+
+| Button | Action |
+|--------|--------|
+| **A / X** | Play / Pause the video |
+| **B / Y** | Restart the video from the beginning |
+
+Recording start and stop are completely independent from video playback — they are controlled only via WebSocket commands from the frontend (see Steps 7–8 above).
 
 ## WebSocket Message Reference
 

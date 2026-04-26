@@ -15,10 +15,6 @@ public class RecordingController : MonoBehaviour
     public Button startButton;
     public Button stopButton;
 
-    [Header("Control por botones VR")]
-    public OVRInput.Button startRecordingButton = OVRInput.Button.One; // Botón A/X
-    public OVRInput.Button stopRecordingButton  = OVRInput.Button.Two; // Botón B/Y
-
     private bool isRecording = false;
 
     void Start()
@@ -50,12 +46,6 @@ public class RecordingController : MonoBehaviour
 
     void Update()
     {
-        if (OVRInput.GetDown(startRecordingButton) && !isRecording)
-            StartRecording();
-
-        if (OVRInput.GetDown(stopRecordingButton) && isRecording)
-            StopRecording();
-
         if (isRecording && facialCapture != null && !facialCapture.IsFaceTrackingEnabled())
             UpdateStatus("ADVERTENCIA: Tracking facial perdido");
     }

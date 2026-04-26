@@ -8,7 +8,7 @@ public class Video360Manager : MonoBehaviour
     public string videoFileName = "VALDIVIA1_video.mp4";
 
     [Tooltip("Reproducir automáticamente al iniciar")]
-    public bool autoPlay = true;
+    public bool autoPlay = false;
 
     [Tooltip("Volumen del video (0 a 1)")]
     [Range(0f, 1f)]
@@ -51,10 +51,6 @@ public class Video360Manager : MonoBehaviour
         Debug.Log("[Video360] Preparando video...");
         videoPlayer.Prepare();
 
-        if (autoPlay)
-        {
-            StartCoroutine(PlayWhenReady());
-        }
     }
 
     void SetupAudio()

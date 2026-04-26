@@ -18,7 +18,7 @@ public class VideoLibraryManager : MonoBehaviour
     };
 
     [Tooltip("Reproducir el primer video al iniciar")]
-    public bool autoPlayFirst = true;
+    public bool autoPlayFirst = false;
 
     private List<string> availableVideos = new List<string>();
     private string currentVideo = "";

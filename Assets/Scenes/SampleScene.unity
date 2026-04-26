@@ -410,7 +410,7 @@ MonoBehaviour:
   knownVideos:
   - valdivia_360_quest.mp4
   - AK_video_2.mp4
-  autoPlayFirst: 1
+  autoPlayFirst: 0
 --- !u!114 &24884547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoFileName: VALDIVIA1_video.mp4
-  autoPlay: 1
+  autoPlay: 0
   volume: 1
   playPauseButton: 1
   restartButton: 2
@@ -1153,8 +1153,6 @@ MonoBehaviour:
   statusText: {fileID: 0}
   startButton: {fileID: 0}
   stopButton: {fileID: 0}
-  startRecordingButton: 1
-  stopRecordingButton: 2
 --- !u!114 &1090165262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1180,7 +1178,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://10.33.9.230:8010
+  serverUrl: ws://192.168.1.93:8010
   vrName: VR UANDES
   minimumValueThreshold: 0.01
 --- !u!1 &1247203999
