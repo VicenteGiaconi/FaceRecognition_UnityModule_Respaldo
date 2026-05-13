@@ -15,6 +15,7 @@ public class VideoLibraryManager : MonoBehaviour
     public string[] knownVideos = {
         "VALDIVIA1_video.mp4",
         "AK_video_2.mp4",
+        "CONCON.mp4"
     };
 
     [Tooltip("Reproducir el primer video al iniciar")]
@@ -52,11 +53,6 @@ public class VideoLibraryManager : MonoBehaviour
 
     public void ChangeVideoPublic(string videoName)
     {
-        if (!availableVideos.Contains(videoName))
-        {
-            Debug.LogWarning($"[VideoLibrary] Video '{videoName}' no está en la lista.");
-            return;
-        }
         ChangeVideoOnMainThread(videoName);
     }
 
@@ -87,6 +83,8 @@ public class VideoLibraryManager : MonoBehaviour
         ChangeVideoOnMainThread(availableVideos[prev]);
     }
 
+    private Coroutine playCoroutine;
+
     void ChangeVideoOnMainThread(string videoName)
     {
         Debug.Log($"[VideoLibrary] Cambiando a: {videoName}");
@@ -94,10 +92,12 @@ public class VideoLibraryManager : MonoBehaviour
 
         if (videoPlayer != null)
         {
+            if (playCoroutine != null)
+                StopCoroutine(playCoroutine);
             videoPlayer.Stop();
             videoPlayer.url = Path.Combine(Application.streamingAssetsPath, videoName);
             videoPlayer.Prepare();
-            StartCoroutine(PlayWhenReady());
+            playCoroutine = StartCoroutine(PlayWhenReady());
         }
         else
         {

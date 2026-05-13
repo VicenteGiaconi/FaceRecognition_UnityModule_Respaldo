@@ -14,6 +14,9 @@ public class WebSocketSender : MonoBehaviour
     // public string serverUrl = "wss://uandes-rcptraining.onrender.com";
     public string vrName = "VR UANDES";
 
+    [Header("Control de Video")]
+    public VideoLibraryManager videoLibrary;
+
     [Header("Filtro de ruido")]
     public float minimumValueThreshold = 0.01f;
 
@@ -54,6 +57,9 @@ public class WebSocketSender : MonoBehaviour
     {
         sessionData = new List<FacialExpressionCapture.FacialData>();
         metricsStats = new Dictionary<string, MetricStats>();
+
+        if (videoLibrary == null)
+            videoLibrary = FindFirstObjectByType<VideoLibraryManager>();
     }
 
     public async void ConnectAsync()
@@ -127,7 +133,7 @@ public class WebSocketSender : MonoBehaviour
             Debug.Log("[WSSender] WebSocket de sesión conectado.");
             isConnected = true;
 
-            var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName };
+            var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName, machine_id = SystemInfo.deviceUniqueIdentifier };
             await SendTextAsync(JsonUtility.ToJson(registerMsg));
             Debug.Log("[WSSender] Mensaje REGISTER enviado.");
 
@@ -189,6 +195,12 @@ public class WebSocketSender : MonoBehaviour
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     OnCommandReceived?.Invoke(msg.type));
+            }
+            else if (msg.type == "VIDEO_PLAY")
+            {
+                var videoMsg = JsonUtility.FromJson<VideoPlayMessage>(message);
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    videoLibrary?.ChangeVideoPublic(videoMsg.name));
             }
         }
         catch (Exception)
@@ -365,8 +377,11 @@ public class WebSocketSender : MonoBehaviour
     private class SessionIdMessage { public string type; public string session_id; public string session_ws_path; }
 
     [Serializable]
-    private class VRRegisterMessage { public string type; public string role; public string name; }
+    private class VRRegisterMessage { public string type; public string role; public string name; public string machine_id; }
 
     [Serializable]
     private class IncomingMessage { public string type; }
+
+    [Serializable]
+    private class VideoPlayMessage { public string type; public string name; }
 }
