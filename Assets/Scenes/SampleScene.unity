@@ -1180,11 +1180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-<<<<<<< Updated upstream
-  serverUrl: ws://10.33.9.230:8010
-=======
   serverUrl: ws://10.33.0.86:8010
->>>>>>> Stashed changes
   vrName: VR UANDES
   minimumValueThreshold: 0.01
 --- !u!1 &1247203999
