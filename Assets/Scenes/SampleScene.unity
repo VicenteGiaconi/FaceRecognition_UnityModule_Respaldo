@@ -408,9 +408,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 0}
   knownVideos:
-  - valdivia_360_quest.mp4
+  - VALDIVIA1_video.mp4
+  - AK_video.mp4
   - AK_video_2.mp4
-  autoPlayFirst: 1
+  - CONCON.mp4
+  - stroop_congruente.mp4
+  - stroop_incongruente.mp4
+  autoPlayFirst: 0
 --- !u!114 &24884547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -424,7 +428,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoFileName: VALDIVIA1_video.mp4
-  autoPlay: 1
+  autoPlay: 0
   volume: 1
   playPauseButton: 1
   restartButton: 2
@@ -813,6 +817,56 @@ Transform:
   - {fileID: 45446115}
   m_Father: {fileID: 1655773072}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &773190229
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 773190231}
+  - component: {fileID: 773190230}
+  m_Layer: 0
+  m_Name: EyeGaze_Left
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &773190230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773190229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28dd40a6d175d01498e0477360d6c070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Eye: 0
+  ConfidenceThreshold: 0.5
+  ApplyPosition: 1
+  ApplyRotation: 1
+  ReferenceFrame: {fileID: 0}
+  TrackingMode: 0
+--- !u!4 &773190231
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773190229}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1090165255}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1067,6 +1121,7 @@ GameObject:
   - component: {fileID: 1090165261}
   - component: {fileID: 1090165262}
   - component: {fileID: 1090165263}
+  - component: {fileID: 1090165264}
   m_Layer: 0
   m_Name: FacialTrackingSystem
   m_TagString: Untagged
@@ -1088,6 +1143,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 832575519}
+  - {fileID: 773190231}
+  - {fileID: 1964602099}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1090165257
@@ -1150,6 +1207,7 @@ MonoBehaviour:
   dataLogger: {fileID: 0}
   realtimeTransmitter: {fileID: 0}
   webSocketSender: {fileID: 0}
+  eyeCapture: {fileID: 0}
   statusText: {fileID: 0}
   startButton: {fileID: 0}
   stopButton: {fileID: 0}
@@ -1180,9 +1238,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://10.33.0.86:8010
+  serverUrl: ws://10.33.0.74:8010
   vrName: VR UANDES
-  minimumValueThreshold: 0.01
+  videoLibrary: {fileID: 24884546}
+  minimumValueThreshold: 0.001
+--- !u!114 &1090165264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1090165254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88ff33529a389f94f9a388bae2e6e130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftEyeGaze: {fileID: 773190230}
+  rightEyeGaze: {fileID: 1964602098}
 --- !u!1 &1247203999
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,7 +1337,7 @@ MonoBehaviour:
   shouldBoundaryVisibilityBeSuppressed: 0
   requestBodyTrackingPermissionOnStartup: 0
   requestFaceTrackingPermissionOnStartup: 1
-  requestEyeTrackingPermissionOnStartup: 0
+  requestEyeTrackingPermissionOnStartup: 1
   requestScenePermissionOnStartup: 0
   requestRecordAudioPermissionOnStartup: 0
   requestPassthroughCameraAccessPermissionOnStartup: 0
@@ -1606,6 +1679,56 @@ Transform:
   - {fileID: 1601716486}
   - {fileID: 2093557297}
   m_Father: {fileID: 1247204002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1964602097
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1964602099}
+  - component: {fileID: 1964602098}
+  m_Layer: 0
+  m_Name: EyeGaze_Right
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1964602098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1964602097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28dd40a6d175d01498e0477360d6c070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Eye: 1
+  ConfidenceThreshold: 0.5
+  ApplyPosition: 1
+  ApplyRotation: 1
+  ReferenceFrame: {fileID: 0}
+  TrackingMode: 0
+--- !u!4 &1964602099
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1964602097}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1090165255}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2093557296
 GameObject:

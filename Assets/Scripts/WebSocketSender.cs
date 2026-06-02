@@ -10,7 +10,7 @@ using UnityEngine;
 public class WebSocketSender : MonoBehaviour
 {
     [Header("Configuración WebSocket")]
-    public string serverUrl = "ws://10.33.9.230:8010";
+    public string serverUrl = "ws://10.33.8.80:8010";
     // public string serverUrl = "wss://uandes-rcptraining.onrender.com";
     public string vrName = "VR UANDES";
 
@@ -18,7 +18,7 @@ public class WebSocketSender : MonoBehaviour
     public VideoLibraryManager videoLibrary;
 
     [Header("Filtro de ruido")]
-    public float minimumValueThreshold = 0.01f;
+    public float minimumValueThreshold = 0.001f;
 
     public string sessionId { get; private set; }
     public bool IsConnected => isConnected;
@@ -34,6 +34,13 @@ public class WebSocketSender : MonoBehaviour
     private int totalBlinks;
     private bool isRecordingSession;
     private Dictionary<string, MetricStats> metricsStats;
+
+    // Eye tracking session state
+    private EyeTrackingCapture eyeCapture;
+    private List<EyeTrackingCapture.EyeFrame> eyeData;
+    private Dictionary<string, MetricStats> eyeStats;
+    private float eyeSessionStartTime;
+    private bool isRecordingEyeSession;
 
     [System.Serializable]
     public class MetricStats
@@ -57,9 +64,13 @@ public class WebSocketSender : MonoBehaviour
     {
         sessionData = new List<FacialExpressionCapture.FacialData>();
         metricsStats = new Dictionary<string, MetricStats>();
+        eyeData  = new List<EyeTrackingCapture.EyeFrame>();
+        eyeStats = new Dictionary<string, MetricStats>();
 
         if (videoLibrary == null)
             videoLibrary = FindFirstObjectByType<VideoLibraryManager>();
+
+        eyeCapture = FindFirstObjectByType<EyeTrackingCapture>();
     }
 
     public async void ConnectAsync()
@@ -202,6 +213,23 @@ public class WebSocketSender : MonoBehaviour
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     videoLibrary?.ChangeVideoPublic(videoMsg.name));
             }
+            else if (msg.type == "VIDEO_LIST_REQUEST")
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    string response;
+                    if (videoLibrary != null)
+                    {
+                        string listJson = videoLibrary.GetVideoListJSON();
+                        response = "{\"type\":\"VIDEO_LIST\"," + listJson.Substring(1);
+                    }
+                    else
+                    {
+                        response = "{\"type\":\"VIDEO_LIST\",\"status\":\"ok\",\"videos\":[],\"current\":\"\"}";
+                    }
+                    _ = SendTextAsync(response);
+                });
+            }
         }
         catch (Exception)
         {
@@ -228,23 +256,62 @@ public class WebSocketSender : MonoBehaviour
         sessionData.Add(data);
         CalculateAndRecordMetrics(data);
 
+        // Sample eye at the same rate as facial (avoids concurrent sends)
+        EyeTrackingCapture.EyeFrame eyeFrame = default;
+        if (isRecordingEyeSession && eyeCapture != null)
+        {
+            eyeFrame = eyeCapture.Sample();
+            if (eyeFrame.valid)
+            {
+                eyeData.Add(eyeFrame);
+                RecordEyeMetric("gaze_x",     eyeFrame.gazeX);
+                RecordEyeMetric("gaze_y",     eyeFrame.gazeY);
+                RecordEyeMetric("confidence", (eyeFrame.leftConfidence + eyeFrame.rightConfidence) * 0.5f);
+                RecordEyeMetric("dist",       eyeFrame.convergenceDist);
+            }
+        }
+
         if (!isConnected || websocket == null || websocket.State != WebSocketState.Open) return;
 
-        StringBuilder sb = new StringBuilder();
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        var sb = new StringBuilder();
         sb.Append("{\"type\":\"FACIAL_RT\",\"t\":");
-        sb.Append(data.timestamp.ToString("F3"));
+        sb.Append(data.timestamp.ToString("F3", ic));
         sb.Append(",\"d\":{");
         bool first = true;
         foreach (var kvp in data.expressions)
         {
             if (kvp.Value < minimumValueThreshold) continue;
             if (!first) sb.Append(",");
-            sb.Append($"\"{(int)kvp.Key}\":{kvp.Value:F3}");
+            sb.Append("\"");
+            sb.Append((int)kvp.Key);
+            sb.Append("\":");
+            sb.Append(kvp.Value.ToString("F3", ic));
             first = false;
         }
         sb.Append("}}");
 
-        _ = SendTextAsync(sb.ToString());
+        _ = SendRealTimeAsync(sb.ToString(), eyeFrame);
+    }
+
+    private async Task SendRealTimeAsync(string facialRt, EyeTrackingCapture.EyeFrame eye)
+    {
+        await SendTextAsync(facialRt);
+        if (!eye.valid) return;
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        var sb = new StringBuilder();
+        sb.Append("{\"type\":\"EYE_RT\",");
+        sb.Append("\"t\":" + eye.timestamp.ToString("F3", ic) + ",");
+        sb.Append("\"gx\":" + eye.gazeX.ToString("F3", ic) + ",");
+        sb.Append("\"gy\":" + eye.gazeY.ToString("F3", ic) + ",");
+        sb.Append("\"lc\":" + eye.leftConfidence.ToString("F3", ic) + ",");
+        sb.Append("\"rc\":" + eye.rightConfidence.ToString("F3", ic) + ",");
+        sb.Append("\"lgx\":" + eye.leftGazeX.ToString("F3", ic) + ",");
+        sb.Append("\"lgy\":" + eye.leftGazeY.ToString("F3", ic) + ",");
+        sb.Append("\"rgx\":" + eye.rightGazeX.ToString("F3", ic) + ",");
+        sb.Append("\"rgy\":" + eye.rightGazeY.ToString("F3", ic) + ",");
+        sb.Append("\"dist\":" + eye.convergenceDist.ToString("F2", ic) + "}");
+        await SendTextAsync(sb.ToString());
     }
 
     public void EndSessionAndSend()
@@ -323,23 +390,31 @@ public class WebSocketSender : MonoBehaviour
 
     private string BuildSessionSummary(float duration)
     {
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
         StringBuilder json = new StringBuilder();
         json.Append("{\"type\":\"FACIAL_SUMMARY\",");
         json.Append("\"metadata\":{");
         json.Append($"\"timestamp\":\"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\",");
-        json.Append($"\"duration\":{duration:F2},");
-        json.Append($"\"dataPoints\":{sessionData.Count},");
-        json.Append($"\"totalBlinks\":{totalBlinks}");
+        json.Append("\"duration\":");
+        json.Append(duration.ToString("F2", ic));
+        json.Append(",\"dataPoints\":");
+        json.Append(sessionData.Count);
+        json.Append(",\"totalBlinks\":");
+        json.Append(totalBlinks);
         json.Append("},");
         json.Append("\"statistics\":{");
         bool firstMetric = true;
         foreach (var kvp in metricsStats)
         {
             if (!firstMetric) json.Append(",");
-            json.Append($"\"{kvp.Key}\":{{");
-            json.Append($"\"min\":{kvp.Value.min:F3},");
-            json.Append($"\"max\":{kvp.Value.max:F3},");
-            json.Append($"\"avg\":{kvp.Value.Average:F3}");
+            json.Append("\"");
+            json.Append(kvp.Key);
+            json.Append("\":{\"min\":");
+            json.Append(kvp.Value.min.ToString("F3", ic));
+            json.Append(",\"max\":");
+            json.Append(kvp.Value.max.ToString("F3", ic));
+            json.Append(",\"avg\":");
+            json.Append(kvp.Value.Average.ToString("F3", ic));
             json.Append("}");
             firstMetric = false;
         }
@@ -349,18 +424,96 @@ public class WebSocketSender : MonoBehaviour
         for (int i = startIdx; i < sessionData.Count; i++)
         {
             if (i > startIdx) json.Append(",");
-            json.Append($"{{\"t\":{sessionData[i].timestamp:F3},\"e\":{{");
+            json.Append("{\"t\":");
+            json.Append(sessionData[i].timestamp.ToString("F3", ic));
+            json.Append(",\"e\":{");
             bool firstExp = true;
             foreach (var exp in sessionData[i].expressions)
             {
                 if (!firstExp) json.Append(",");
-                json.Append($"\"{(int)exp.Key}\":{exp.Value:F3}");
+                json.Append("\"");
+                json.Append((int)exp.Key);
+                json.Append("\":");
+                json.Append(exp.Value.ToString("F3", ic));
                 firstExp = false;
             }
             json.Append("}}");
         }
         json.Append("]}");
         return json.ToString();
+    }
+
+    // --- Eye tracking session ---
+
+    public void StartEyeSession()
+    {
+        eyeData.Clear();
+        eyeStats.Clear();
+        eyeSessionStartTime = Time.time;
+        isRecordingEyeSession = true;
+        Debug.Log("[WSSender] Sesión ocular iniciada.");
+    }
+
+    public void EndEyeSessionAndSend()
+    {
+        if (!isRecordingEyeSession)
+        {
+            Debug.LogWarning("[WSSender] No hay sesión ocular activa para enviar.");
+            return;
+        }
+
+        isRecordingEyeSession = false;
+        float duration = Time.time - eyeSessionStartTime;
+        Debug.Log($"[WSSender] Finalizando sesión ocular. Duración: {duration:F1}s, Puntos: {eyeData.Count}");
+
+        if (!isConnected || websocket == null || websocket.State != WebSocketState.Open)
+        {
+            Debug.LogWarning("[WSSender] No conectado, no se puede enviar resumen ocular.");
+            return;
+        }
+
+        _ = SendTextAsync(BuildEyeSummary(duration));
+        Debug.Log("[WSSender] Resumen ocular enviado.");
+    }
+
+    private void RecordEyeMetric(string name, float value)
+    {
+        if (!eyeStats.ContainsKey(name)) eyeStats[name] = new MetricStats();
+        eyeStats[name].AddValue(value);
+    }
+
+    private string BuildEyeSummary(float duration)
+    {
+        var sb = new StringBuilder();
+        sb.Append("{\"type\":\"EYE_SUMMARY\",");
+        sb.Append("\"metadata\":{");
+        sb.Append($"\"timestamp\":\"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\",");
+        sb.Append($"\"duration\":{duration:F2},");
+        sb.Append($"\"dataPoints\":{eyeData.Count}");
+        sb.Append("},");
+        sb.Append("\"statistics\":{");
+        bool firstMetric = true;
+        foreach (var kvp in eyeStats)
+        {
+            if (!firstMetric) sb.Append(",");
+            sb.Append($"\"{kvp.Key}\":{{");
+            sb.Append($"\"min\":{kvp.Value.min:F3},");
+            sb.Append($"\"max\":{kvp.Value.max:F3},");
+            sb.Append($"\"avg\":{kvp.Value.Average:F3}}}");
+            firstMetric = false;
+        }
+        sb.Append("},\"rawData\":[");
+        int startIdx = Mathf.Max(0, eyeData.Count - 1000);
+        for (int i = startIdx; i < eyeData.Count; i++)
+        {
+            if (i > startIdx) sb.Append(",");
+            sb.Append($"{{\"t\":{eyeData[i].timestamp:F3},");
+            sb.Append($"\"gx\":{eyeData[i].gazeX:F3},");
+            sb.Append($"\"gy\":{eyeData[i].gazeY:F3},");
+            sb.Append($"\"dist\":{eyeData[i].convergenceDist:F2}}}");
+        }
+        sb.Append("]}");
+        return sb.ToString();
     }
 
     private async void OnApplicationQuit()
