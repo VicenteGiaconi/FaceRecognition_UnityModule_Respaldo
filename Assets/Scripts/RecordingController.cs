@@ -9,6 +9,8 @@ public class RecordingController : MonoBehaviour
     public DataLogger dataLogger;
     public RealtimeDataTransmitter realtimeTransmitter;
     public WebSocketSender webSocketSender;
+    public EyeTrackingCapture eyeCapture;
+    public VideoLibraryManager videoLibrary;
 
     [Header("UI (opcional)")]
     public TextMeshProUGUI statusText;
@@ -31,6 +33,10 @@ public class RecordingController : MonoBehaviour
             realtimeTransmitter = FindFirstObjectByType<RealtimeDataTransmitter>();
         if (webSocketSender == null)
             webSocketSender = FindFirstObjectByType<WebSocketSender>();
+        if (eyeCapture == null)
+            eyeCapture = FindFirstObjectByType<EyeTrackingCapture>();
+        if (videoLibrary == null)
+            videoLibrary = FindFirstObjectByType<VideoLibraryManager>();
 
         if (webSocketSender != null)
         {
@@ -58,6 +64,7 @@ public class RecordingController : MonoBehaviour
 
         if (isRecording && facialCapture != null && !facialCapture.IsFaceTrackingEnabled())
             UpdateStatus("ADVERTENCIA: Tracking facial perdido");
+
     }
 
     public void StartRecording()
@@ -80,8 +87,11 @@ public class RecordingController : MonoBehaviour
 
         dataLogger.StartLogging();
         facialCapture.StartCapture();
+        eyeCapture?.StartCapture();
         realtimeTransmitter?.StartTransmission();
         webSocketSender?.StartSession();
+        webSocketSender?.StartEyeSession();
+        videoLibrary?.PlayCurrentVideo();
 
         isRecording = true;
 
@@ -97,9 +107,12 @@ public class RecordingController : MonoBehaviour
         if (!isRecording) return;
 
         facialCapture?.StopCapture();
+        eyeCapture?.StopCapture();
         dataLogger?.StopLogging();
         realtimeTransmitter?.StopTransmission();
         webSocketSender?.EndSessionAndSend();
+        webSocketSender?.EndEyeSessionAndSend();
+        videoLibrary?.StopCurrentVideo();
 
         isRecording = false;
 

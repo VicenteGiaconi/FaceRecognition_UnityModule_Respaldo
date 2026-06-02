@@ -679,7 +679,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoFileName: VALDIVIA 360 14.mp4
-  autoPlay: 1
+  autoPlay: 0
   volume: 1
   playPauseButton: 1
   restartButton: 2
