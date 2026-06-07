@@ -7,8 +7,8 @@ public class Video360Manager : MonoBehaviour
     [Tooltip("Nombre del archivo de video en StreamingAssets (ejemplo: video360.mp4)")]
     public string videoFileName = "VALDIVIA1_video.mp4";
 
-    [Tooltip("Reproducir automáticamente al iniciar")]
-    public bool autoPlay = true;
+    [Tooltip("Reproducir automáticamente al iniciar (false = esperar señal del frontend)")]
+    public bool autoPlay = false;
 
     [Tooltip("Volumen del video (0 a 1)")]
     [Range(0f, 1f)]
@@ -47,14 +47,12 @@ public class Video360Manager : MonoBehaviour
         videoPlayer.errorReceived += OnVideoError;
         videoPlayer.loopPointReached += OnVideoLoop;
 
-        // Preparar el video
+        // Preparar el video (precarga sin reproducir)
         Debug.Log("[Video360] Preparando video...");
         videoPlayer.Prepare();
 
         if (autoPlay)
-        {
             StartCoroutine(PlayWhenReady());
-        }
     }
 
     void SetupAudio()

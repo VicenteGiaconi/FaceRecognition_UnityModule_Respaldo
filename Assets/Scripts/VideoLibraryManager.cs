@@ -14,12 +14,17 @@ public class VideoLibraryManager : MonoBehaviour
     [Tooltip("Lista de nombres de archivos .mp4 en Assets/StreamingAssets/")]
     public string[] knownVideos = {
         "VALDIVIA1_video.mp4",
+        "AK_video.mp4",
         "AK_video_2.mp4",
-        "CONCON.mp4"
+        "CONCON.mp4",
+        "stroop_congruente.mp4",
+        "stroop_incongruente.mp4",
+        "litoral_central_chile.mp4",
+        "tricao.mp4"
     };
 
-    [Tooltip("Reproducir el primer video al iniciar")]
-    public bool autoPlayFirst = true;
+    [Tooltip("Reproducir el primer video al iniciar (false = esperar señal del frontend)")]
+    public bool autoPlayFirst = false;
 
     private List<string> availableVideos = new List<string>();
     private string currentVideo = "";
@@ -31,8 +36,13 @@ public class VideoLibraryManager : MonoBehaviour
 
         ScanAvailableVideos();
 
-        if (autoPlayFirst && availableVideos.Count > 0)
-            ChangeVideoPublic(availableVideos[0]);
+        if (availableVideos.Count > 0)
+        {
+            if (autoPlayFirst)
+                ChangeVideoPublic(availableVideos[0]);
+            else
+                PrepareVideoOnly(availableVideos[0]); // precarga sin reproducir
+        }
 
         Debug.Log("[VideoLibrary] Listo. Videos en StreamingAssets.");
     }
@@ -54,6 +64,22 @@ public class VideoLibraryManager : MonoBehaviour
     public void ChangeVideoPublic(string videoName)
     {
         ChangeVideoOnMainThread(videoName);
+    }
+
+    public void PlayCurrentVideo()
+    {
+        if (videoPlayer == null) return;
+        if (playCoroutine != null) StopCoroutine(playCoroutine);
+        playCoroutine = StartCoroutine(PlayWhenReady());
+        Debug.Log($"[VideoLibrary] Reproduciendo video actual: {currentVideo}");
+    }
+
+    public void StopCurrentVideo()
+    {
+        if (videoPlayer == null) return;
+        if (playCoroutine != null) { StopCoroutine(playCoroutine); playCoroutine = null; }
+        videoPlayer.Stop();
+        Debug.Log($"[VideoLibrary] Video detenido: {currentVideo}");
     }
 
     public string GetVideoListJSON()
@@ -85,24 +111,24 @@ public class VideoLibraryManager : MonoBehaviour
 
     private Coroutine playCoroutine;
 
+    // Precarga el video sin reproducirlo (para startup rápido)
+    private void PrepareVideoOnly(string videoName)
+    {
+        Debug.Log($"[VideoLibrary] Precargando (sin reproducir): {videoName}");
+        currentVideo = videoName;
+
+        if (videoPlayer == null) { Debug.LogError("[VideoLibrary] VideoPlayer no disponible."); return; }
+
+        if (playCoroutine != null) { StopCoroutine(playCoroutine); playCoroutine = null; }
+        videoPlayer.Stop();
+        videoPlayer.url = Path.Combine(Application.streamingAssetsPath, videoName);
+        videoPlayer.Prepare();
+    }
+
     void ChangeVideoOnMainThread(string videoName)
     {
         Debug.Log($"[VideoLibrary] Cambiando a: {videoName}");
-        currentVideo = videoName;
-
-        if (videoPlayer != null)
-        {
-            if (playCoroutine != null)
-                StopCoroutine(playCoroutine);
-            videoPlayer.Stop();
-            videoPlayer.url = Path.Combine(Application.streamingAssetsPath, videoName);
-            videoPlayer.Prepare();
-            playCoroutine = StartCoroutine(PlayWhenReady());
-        }
-        else
-        {
-            Debug.LogError("[VideoLibrary] VideoPlayer no disponible.");
-        }
+        PrepareVideoOnly(videoName);
     }
 
     IEnumerator PlayWhenReady()
