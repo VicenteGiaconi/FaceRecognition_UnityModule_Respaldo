@@ -18,7 +18,9 @@ public class VideoLibraryManager : MonoBehaviour
         "AK_video_2.mp4",
         "CONCON.mp4",
         "stroop_congruente.mp4",
-        "stroop_incongruente.mp4"
+        "stroop_incongruente.mp4",
+        "litoral_central_chile.mp4",
+        "tricao.mp4"
     };
 
     [Tooltip("Reproducir el primer video al iniciar (false = esperar señal del frontend)")]

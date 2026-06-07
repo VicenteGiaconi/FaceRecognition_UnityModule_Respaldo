@@ -34,4 +34,4 @@
 # IDEs
 .vs/
 .idea/
-.DS_Store
+.DS_Store*.blob

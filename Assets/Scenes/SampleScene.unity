@@ -414,6 +414,8 @@ MonoBehaviour:
   - CONCON.mp4
   - stroop_congruente.mp4
   - stroop_incongruente.mp4
+  - litoral_central_chile.mp4
+  - tricao.mp4
   autoPlayFirst: 0
 --- !u!114 &24884547
 MonoBehaviour:
@@ -1208,6 +1210,7 @@ MonoBehaviour:
   realtimeTransmitter: {fileID: 0}
   webSocketSender: {fileID: 0}
   eyeCapture: {fileID: 0}
+  videoLibrary: {fileID: 0}
   statusText: {fileID: 0}
   startButton: {fileID: 0}
   stopButton: {fileID: 0}
@@ -1238,7 +1241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://10.33.0.74:8010
+  serverUrl: wss://jacinta-rcp-backend.onrender.com
   vrName: VR UANDES
   videoLibrary: {fileID: 24884546}
   minimumValueThreshold: 0.001
