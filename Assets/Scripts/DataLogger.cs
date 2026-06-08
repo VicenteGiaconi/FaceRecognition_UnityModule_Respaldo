@@ -3,36 +3,34 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System;
+
 public class DataLogger : MonoBehaviour
 {
-    [Header("Configuraci�n de archivo")]
+    [Header("Configuracion de archivo")]
     public string fileName = "facial_data";
     public bool useTimestampInFileName = true;
     private string filePath;
     private StreamWriter writer;
     private bool isLogging = false;
     private StringBuilder csvBuilder;
+
     void Start()
     {
-        // Crear nombre de archivo con timestamp si est� habilitado
         string finalFileName = fileName;
         if (useTimestampInFileName)
-        {
             finalFileName += "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        }
         finalFileName += ".csv";
-        // Ruta del archivo (en Android se guarda en persistentDataPath)
         filePath = Path.Combine(Application.persistentDataPath, finalFileName);
-        Debug.Log("Archivo de datos se guardar� en: " + filePath);
+        Debug.Log("Archivo de datos se guardara en: " + filePath);
         csvBuilder = new StringBuilder();
     }
+
     public void StartLogging()
     {
         if (isLogging) return;
         try
         {
-            writer = new StreamWriter(filePath, false); // false = sobrescribir
-            // Escribir encabezados
+            writer = new StreamWriter(filePath, false);
             WriteHeaders();
             isLogging = true;
             Debug.Log("Logging iniciado: " + filePath);
@@ -42,6 +40,7 @@ public class DataLogger : MonoBehaviour
             Debug.LogError("Error al iniciar logging: " + e.Message);
         }
     }
+
     public void StopLogging()
     {
         if (!isLogging) return;
@@ -54,7 +53,6 @@ public class DataLogger : MonoBehaviour
             }
             isLogging = false;
             Debug.Log("Logging detenido. Archivo guardado en: " + filePath);
-            // Mostrar ruta en VR (�til para encontrar el archivo despu�s)
             ShowFilePathInConsole();
         }
         catch (Exception e)
@@ -62,65 +60,75 @@ public class DataLogger : MonoBehaviour
             Debug.LogError("Error al detener logging: " + e.Message);
         }
     }
+
     void WriteHeaders()
     {
         csvBuilder.Clear();
         csvBuilder.Append("Timestamp,");
-        // Agregar todas las expresiones faciales como columnas
         foreach (OVRFaceExpressions.FaceExpression expression in Enum.GetValues(typeof(OVRFaceExpressions.FaceExpression)))
         {
             if (expression == OVRFaceExpressions.FaceExpression.Max ||
                 expression == OVRFaceExpressions.FaceExpression.Invalid)
-            {
                 continue;
-            }
             csvBuilder.Append(expression.ToString());
             csvBuilder.Append(",");
         }
-        // Remover �ltima coma y agregar nueva l�nea
-        csvBuilder.Length--;
+        csvBuilder.Append("Eye_GazeX,Eye_GazeY,Eye_LeftGazeX,Eye_LeftGazeY,Eye_RightGazeX,Eye_RightGazeY,Eye_LeftConf,Eye_RightConf,Eye_ConvergenceDist");
         csvBuilder.AppendLine();
         writer.WriteLine(csvBuilder.ToString());
     }
-    public void LogFacialData(FacialExpressionCapture.FacialData data)
+
+    public void LogCombinedData(FacialExpressionCapture.FacialData facial, EyeTrackingCapture.EyeFrame eye)
     {
         if (!isLogging || writer == null) return;
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
         try
         {
             csvBuilder.Clear();
-            csvBuilder.Append(data.timestamp.ToString("F4"));
+            csvBuilder.Append(facial.timestamp.ToString("F4", ic));
             csvBuilder.Append(",");
-            // Escribir valores de todas las expresiones
             foreach (OVRFaceExpressions.FaceExpression expression in Enum.GetValues(typeof(OVRFaceExpressions.FaceExpression)))
             {
                 if (expression == OVRFaceExpressions.FaceExpression.Max ||
                     expression == OVRFaceExpressions.FaceExpression.Invalid)
-                {
                     continue;
-                }
                 float value = 0f;
-                if (data.expressions.ContainsKey(expression))
-                {
-                    value = data.expressions[expression];
-                }
-                csvBuilder.Append(value.ToString("F4"));
+                facial.expressions.TryGetValue(expression, out value);
+                csvBuilder.Append(value.ToString("F4", ic));
                 csvBuilder.Append(",");
             }
-            // Remover �ltima coma y agregar nueva l�nea
-            csvBuilder.Length--;
+            if (eye.valid)
+            {
+                csvBuilder.Append(eye.gazeX.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.gazeY.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.leftGazeX.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.leftGazeY.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.rightGazeX.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.rightGazeY.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.leftConfidence.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.rightConfidence.ToString("F3", ic)); csvBuilder.Append(",");
+                csvBuilder.Append(eye.convergenceDist.ToString("F3", ic));
+            }
+            else
+            {
+                csvBuilder.Append(",,,,,,,, ");
+            }
             csvBuilder.AppendLine();
             writer.WriteLine(csvBuilder.ToString());
-            // Flush peri�dicamente para evitar p�rdida de datos
-            if (Time.frameCount % 100 == 0)
-            {
-                writer.Flush();
-            }
+            if (Time.frameCount % 100 == 0) writer.Flush();
         }
         catch (Exception e)
         {
-            Debug.LogError("Error al escribir datos: " + e.Message);
+            Debug.LogError("Error al escribir datos combinados: " + e.Message);
         }
     }
+
+    // Mantiene compatibilidad con llamadas existentes sin eye tracking
+    public void LogFacialData(FacialExpressionCapture.FacialData data)
+    {
+        LogCombinedData(data, default);
+    }
+
     void ShowFilePathInConsole()
     {
         Debug.Log("=================================================");
@@ -130,21 +138,12 @@ public class DataLogger : MonoBehaviour
         Debug.Log("Para recuperar el archivo desde Quest Pro:");
         Debug.Log("1. Conecta Quest Pro a PC con USB");
         Debug.Log("2. Abre 'Archivos' o 'Explorador de archivos'");
-        Debug.Log("3. Navega a: Quest 2 > Internal Storage > Android > data > com.tucompa�ia.FacialTracking > files");
+        Debug.Log("3. Navega a: Quest Pro > Internal Storage > Android > data > com.tucompania.FacialTracking > files");
         Debug.Log("=================================================");
     }
-    void OnApplicationQuit()
-    {
-        StopLogging();
-    }
-    void OnDestroy()
-    {
-        StopLogging();
-    }
-    // M�todo p�blico para obtener la ruta del archivo
-    public string GetFilePath()
-    {
-        return filePath;
-    }
-}
 
+    void OnApplicationQuit() { StopLogging(); }
+    void OnDestroy() { StopLogging(); }
+
+    public string GetFilePath() { return filePath; }
+}

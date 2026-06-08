@@ -10,7 +10,7 @@ using UnityEngine;
 public class WebSocketSender : MonoBehaviour
 {
     [Header("Configuración WebSocket")]
-    public string serverUrl = "ws://10.33.8.80:8010";
+    public string serverUrl = "ws://10.33.0.137:8010";
     // public string serverUrl = "wss://uandes-rcptraining.onrender.com";
     public string vrName = "VR UANDES";
 
@@ -34,6 +34,8 @@ public class WebSocketSender : MonoBehaviour
     private int totalBlinks;
     private bool isRecordingSession;
     private Dictionary<string, MetricStats> metricsStats;
+
+    private DataLogger dataLogger;
 
     // Eye tracking session state
     private EyeTrackingCapture eyeCapture;
@@ -71,6 +73,7 @@ public class WebSocketSender : MonoBehaviour
             videoLibrary = FindFirstObjectByType<VideoLibraryManager>();
 
         eyeCapture = FindFirstObjectByType<EyeTrackingCapture>();
+        dataLogger = FindFirstObjectByType<DataLogger>();
     }
 
     public async void ConnectAsync()
@@ -270,6 +273,8 @@ public class WebSocketSender : MonoBehaviour
                 RecordEyeMetric("dist",       eyeFrame.convergenceDist);
             }
         }
+
+        dataLogger?.LogCombinedData(data, eyeFrame);
 
         if (!isConnected || websocket == null || websocket.State != WebSocketState.Open) return;
 
@@ -484,22 +489,30 @@ public class WebSocketSender : MonoBehaviour
 
     private string BuildEyeSummary(float duration)
     {
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
         var sb = new StringBuilder();
         sb.Append("{\"type\":\"EYE_SUMMARY\",");
         sb.Append("\"metadata\":{");
         sb.Append($"\"timestamp\":\"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\",");
-        sb.Append($"\"duration\":{duration:F2},");
-        sb.Append($"\"dataPoints\":{eyeData.Count}");
+        sb.Append("\"duration\":");
+        sb.Append(duration.ToString("F2", ic));
+        sb.Append(",\"dataPoints\":");
+        sb.Append(eyeData.Count);
         sb.Append("},");
         sb.Append("\"statistics\":{");
         bool firstMetric = true;
         foreach (var kvp in eyeStats)
         {
             if (!firstMetric) sb.Append(",");
-            sb.Append($"\"{kvp.Key}\":{{");
-            sb.Append($"\"min\":{kvp.Value.min:F3},");
-            sb.Append($"\"max\":{kvp.Value.max:F3},");
-            sb.Append($"\"avg\":{kvp.Value.Average:F3}}}");
+            sb.Append("\"");
+            sb.Append(kvp.Key);
+            sb.Append("\":{\"min\":");
+            sb.Append(kvp.Value.min.ToString("F3", ic));
+            sb.Append(",\"max\":");
+            sb.Append(kvp.Value.max.ToString("F3", ic));
+            sb.Append(",\"avg\":");
+            sb.Append(kvp.Value.Average.ToString("F3", ic));
+            sb.Append("}");
             firstMetric = false;
         }
         sb.Append("},\"rawData\":[");
@@ -507,10 +520,15 @@ public class WebSocketSender : MonoBehaviour
         for (int i = startIdx; i < eyeData.Count; i++)
         {
             if (i > startIdx) sb.Append(",");
-            sb.Append($"{{\"t\":{eyeData[i].timestamp:F3},");
-            sb.Append($"\"gx\":{eyeData[i].gazeX:F3},");
-            sb.Append($"\"gy\":{eyeData[i].gazeY:F3},");
-            sb.Append($"\"dist\":{eyeData[i].convergenceDist:F2}}}");
+            sb.Append("{\"t\":");
+            sb.Append(eyeData[i].timestamp.ToString("F3", ic));
+            sb.Append(",\"gx\":");
+            sb.Append(eyeData[i].gazeX.ToString("F3", ic));
+            sb.Append(",\"gy\":");
+            sb.Append(eyeData[i].gazeY.ToString("F3", ic));
+            sb.Append(",\"dist\":");
+            sb.Append(eyeData[i].convergenceDist.ToString("F2", ic));
+            sb.Append("}");
         }
         sb.Append("]}");
         return sb.ToString();

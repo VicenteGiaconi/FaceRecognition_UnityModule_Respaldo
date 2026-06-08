@@ -77,7 +77,6 @@ public class FacialExpressionCapture : MonoBehaviour
                 data.expressions[expression] = weight;
         }
 
-        dataLogger?.LogFacialData(data);
         realtimeTransmitter?.TransmitFacialData(data);
         webSocketSender?.RecordData(data);
     }
