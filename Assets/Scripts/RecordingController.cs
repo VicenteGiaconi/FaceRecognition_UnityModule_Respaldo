@@ -22,6 +22,7 @@ public class RecordingController : MonoBehaviour
     public OVRInput.Button stopRecordingButton  = OVRInput.Button.Two; // Botón B/Y
 
     private bool isRecording = false;
+    private float lastTrackingWarnTime = -999f;
 
     void Start()
     {
@@ -40,7 +41,10 @@ public class RecordingController : MonoBehaviour
 
         if (webSocketSender != null)
         {
-            webSocketSender.OnCommandReceived += HandleRemoteCommand;
+            webSocketSender.OnCommandReceived    += HandleRemoteCommand;
+            webSocketSender.OnConnectionDropped  += OnWsDropped;
+            webSocketSender.OnConnectionRestored += OnWsRestored;
+            webSocketSender.OnConnectionFailed   += OnWsFailed;
             webSocketSender.ConnectAsync();
         }
 
@@ -63,7 +67,14 @@ public class RecordingController : MonoBehaviour
             StopRecording();
 
         if (isRecording && facialCapture != null && !facialCapture.IsFaceTrackingEnabled())
-            UpdateStatus("ADVERTENCIA: Tracking facial perdido");
+        {
+            if (statusText != null) statusText.text = "ADVERTENCIA: Tracking facial perdido";
+            if (Time.time - lastTrackingWarnTime > 3f)
+            {
+                Debug.LogWarning("[RecCtrl] Tracking facial perdido");
+                lastTrackingWarnTime = Time.time;
+            }
+        }
 
     }
 
@@ -145,6 +156,24 @@ public class RecordingController : MonoBehaviour
 
     public bool IsRecording() => isRecording;
     public string GetCurrentFilePath() => dataLogger != null ? dataLogger.GetFilePath() : "";
+
+    private void OnWsDropped()
+    {
+        if (isRecording)
+            UpdateStatus("ADVERTENCIA: Conexión perdida. Reconectando...");
+    }
+
+    private void OnWsRestored()
+    {
+        if (isRecording)
+            UpdateStatus("GRABANDO...");
+    }
+
+    private void OnWsFailed()
+    {
+        if (isRecording)
+            UpdateStatus("ERROR: Sin conexión. Usa B/Y para detener y guardar CSV.");
+    }
 
     void OnApplicationQuit() { if (isRecording) StopRecording(); }
 }

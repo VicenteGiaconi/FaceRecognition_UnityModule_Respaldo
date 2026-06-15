@@ -16,12 +16,6 @@ public class DataLogger : MonoBehaviour
 
     void Start()
     {
-        string finalFileName = fileName;
-        if (useTimestampInFileName)
-            finalFileName += "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        finalFileName += ".csv";
-        filePath = Path.Combine(Application.persistentDataPath, finalFileName);
-        Debug.Log("Archivo de datos se guardara en: " + filePath);
         csvBuilder = new StringBuilder();
     }
 
@@ -30,6 +24,12 @@ public class DataLogger : MonoBehaviour
         if (isLogging) return;
         try
         {
+            string finalFileName = fileName;
+            if (useTimestampInFileName)
+                finalFileName += "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            finalFileName += ".csv";
+            filePath = Path.Combine(Application.persistentDataPath, finalFileName);
+            Debug.Log("Archivo de datos se guardara en: " + filePath);
             writer = new StreamWriter(filePath, false);
             WriteHeaders();
             isLogging = true;
