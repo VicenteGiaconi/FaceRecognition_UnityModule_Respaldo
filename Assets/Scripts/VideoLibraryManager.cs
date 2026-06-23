@@ -70,6 +70,7 @@ public class VideoLibraryManager : MonoBehaviour
     {
         if (videoPlayer == null) return;
         if (playCoroutine != null) StopCoroutine(playCoroutine);
+        videoPlayer.Prepare();
         playCoroutine = StartCoroutine(PlayWhenReady());
         Debug.Log($"[VideoLibrary] Reproduciendo video actual: {currentVideo}");
     }

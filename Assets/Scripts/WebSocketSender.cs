@@ -24,6 +24,9 @@ public class WebSocketSender : MonoBehaviour
     public bool IsConnected => isConnected;
 
     public Action<string> OnCommandReceived;
+    public Action OnConnectionDropped;
+    public Action OnConnectionRestored;
+    public Action OnConnectionFailed;
 
     private ClientWebSocket websocket;
     private CancellationTokenSource cts;
@@ -139,24 +142,66 @@ public class WebSocketSender : MonoBehaviour
 
     private async Task ConnectToSessionWebSocket()
     {
-        websocket = new ClientWebSocket();
+        int retryDelay = 2000;
+        const int maxRetries = 5;
+        int attempt = 0;
 
-        try
+        while (attempt <= maxRetries && !cts.IsCancellationRequested)
         {
-            await websocket.ConnectAsync(new Uri($"{serverUrl}/ws/session/{sessionId}/"), cts.Token);
-            Debug.Log("[WSSender] WebSocket de sesión conectado.");
-            isConnected = true;
+            if (attempt > 0)
+            {
+                Debug.LogWarning($"[WSSender] Reconectando sesión {sessionId} (intento {attempt}/{maxRetries}) en {retryDelay / 1000}s...");
+                UnityMainThreadDispatcher.Instance().Enqueue(() => OnConnectionDropped?.Invoke());
+                try { await Task.Delay(retryDelay, cts.Token); }
+                catch (OperationCanceledException) { break; }
+                retryDelay = Math.Min(retryDelay * 2, 15000);
+            }
 
-            var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName, machine_id = SystemInfo.deviceUniqueIdentifier };
-            await SendTextAsync(JsonUtility.ToJson(registerMsg));
-            Debug.Log("[WSSender] Mensaje REGISTER enviado.");
+            websocket?.Dispose();
+            websocket = new ClientWebSocket();
 
-            await ReceiveSessionMessages();
+            try
+            {
+                using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                connectCts.CancelAfter(TimeSpan.FromSeconds(10));
+                try
+                {
+                    await websocket.ConnectAsync(new Uri($"{serverUrl}/ws/session/{sessionId}/"), connectCts.Token);
+                }
+                catch (OperationCanceledException) when (!cts.IsCancellationRequested)
+                {
+                    throw new Exception("Timeout de conexión (10s)");
+                }
+                isConnected = true;
+
+                var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName, machine_id = SystemInfo.deviceUniqueIdentifier };
+                await SendTextAsync(JsonUtility.ToJson(registerMsg));
+                Debug.Log($"[WSSender] WebSocket de sesión conectado (intento {attempt + 1}).");
+
+                if (attempt > 0)
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => OnConnectionRestored?.Invoke());
+
+                await ReceiveSessionMessages();
+
+                if (cts.IsCancellationRequested) break;
+
+                Debug.LogWarning("[WSSender] Conexión caída, intentando reconectar...");
+                attempt++;
+            }
+            catch (OperationCanceledException) { break; }
+            catch (Exception e)
+            {
+                Debug.LogError($"[WSSender] Error conectando (intento {attempt + 1}): {e.Message}");
+                isConnected = false;
+                attempt++;
+            }
         }
-        catch (Exception e)
+
+        isConnected = false;
+        if (attempt > maxRetries)
         {
-            Debug.LogError("[WSSender] Error conectando al WebSocket de sesión: " + e.Message);
-            isConnected = false;
+            Debug.LogError("[WSSender] No se pudo reconectar después de varios intentos.");
+            UnityMainThreadDispatcher.Instance().Enqueue(() => OnConnectionFailed?.Invoke());
         }
     }
 
@@ -195,9 +240,18 @@ public class WebSocketSender : MonoBehaviour
     private async Task SendTextAsync(string text)
     {
         if (websocket == null || websocket.State != WebSocketState.Open) return;
-        var bytes = Encoding.UTF8.GetBytes(text);
-        await websocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true,
-            cts?.Token ?? CancellationToken.None);
+        try
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            await websocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true,
+                cts?.Token ?? CancellationToken.None);
+        }
+        catch (ObjectDisposedException) { }
+        catch (OperationCanceledException) { }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[WSSender] Error al enviar: " + e.Message);
+        }
     }
 
     private void ProcessMessage(string message)
@@ -331,13 +385,16 @@ public class WebSocketSender : MonoBehaviour
         float duration = Time.time - sessionStartTime;
         Debug.Log($"[WSSender] Finalizando sesión. Duración: {duration:F1}s, Puntos: {sessionData.Count}");
 
+        string summary = BuildSessionSummary(duration);
+        SaveSummaryToFile(summary, "facial");
+
         if (!isConnected || websocket == null || websocket.State != WebSocketState.Open)
         {
-            Debug.LogWarning("[WSSender] No conectado, no se puede enviar resumen.");
+            Debug.LogWarning("[WSSender] No conectado. Resumen guardado localmente.");
             return;
         }
 
-        _ = SendTextAsync(BuildSessionSummary(duration));
+        _ = SendTextAsync(summary);
         Debug.Log("[WSSender] Resumen de sesión enviado.");
     }
 
@@ -471,13 +528,16 @@ public class WebSocketSender : MonoBehaviour
         float duration = Time.time - eyeSessionStartTime;
         Debug.Log($"[WSSender] Finalizando sesión ocular. Duración: {duration:F1}s, Puntos: {eyeData.Count}");
 
+        string summary = BuildEyeSummary(duration);
+        SaveSummaryToFile(summary, "eye");
+
         if (!isConnected || websocket == null || websocket.State != WebSocketState.Open)
         {
-            Debug.LogWarning("[WSSender] No conectado, no se puede enviar resumen ocular.");
+            Debug.LogWarning("[WSSender] No conectado. Resumen ocular guardado localmente.");
             return;
         }
 
-        _ = SendTextAsync(BuildEyeSummary(duration));
+        _ = SendTextAsync(summary);
         Debug.Log("[WSSender] Resumen ocular enviado.");
     }
 
@@ -532,6 +592,21 @@ public class WebSocketSender : MonoBehaviour
         }
         sb.Append("]}");
         return sb.ToString();
+    }
+
+    private void SaveSummaryToFile(string json, string prefix)
+    {
+        try
+        {
+            string fileName = $"{prefix}_summary_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            string path = Path.Combine(Application.persistentDataPath, fileName);
+            File.WriteAllText(path, json);
+            Debug.Log($"[WSSender] Resumen guardado en: {path}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("[WSSender] Error guardando resumen local: " + e.Message);
+        }
     }
 
     private async void OnApplicationQuit()
