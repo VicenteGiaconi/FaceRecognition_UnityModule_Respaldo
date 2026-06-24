@@ -15,8 +15,8 @@ public class Video360Manager : MonoBehaviour
     public float volume = 1.0f;
 
     [Header("Control VR (Opcional)")]
-    public OVRInput.Button playPauseButton = OVRInput.Button.One; // Botón A/X
-    public OVRInput.Button restartButton = OVRInput.Button.Two;   // Botón B/Y
+    public OVRInput.Button playPauseButton = OVRInput.Button.PrimaryIndexTrigger;   // Gatillo derecho
+    public OVRInput.Button restartButton = OVRInput.Button.SecondaryIndexTrigger; // Gatillo izquierdo
 
     private VideoPlayer videoPlayer;
     private bool isPaused = false;
