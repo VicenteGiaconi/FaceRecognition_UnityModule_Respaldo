@@ -389,7 +389,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: -100, y: 100, z: 100}
+  m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -413,11 +413,9 @@ MonoBehaviour:
   - LITORAL_CENTRAL.mp4
   - TRICAO.mp4
   - MIX_TRICAO+PLAYAS.mp4
-  - stroop_congruente.mp4
-  - stroop_incongruente.mp4
-  - stroop.mp4
-  - flankers.mp4
-  - go_no_go.mp4
+  - Stroop.mp4
+  - GoNoGo.mp4
+  - Flankers.mp4
   autoPlayFirst: 0
 --- !u!114 &24884547
 MonoBehaviour:
@@ -434,8 +432,8 @@ MonoBehaviour:
   videoFileName: VALDIVIA1_video.mp4
   autoPlay: 0
   volume: 1
-  playPauseButton: 1
-  restartButton: 2
+  playPauseButton: 8192
+  restartButton: 2097152
 --- !u!1 &45446114
 GameObject:
   m_ObjectHideFlags: 0
@@ -1243,7 +1241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce87455e9c542144394591b86a4ddc3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: wss://jacinta-rcp-backend.onrender.com
+  serverUrl: ws://192.168.100.2:8010
   vrName: VR UANDES
   videoLibrary: {fileID: 24884546}
   minimumValueThreshold: 0.001

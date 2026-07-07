@@ -681,8 +681,8 @@ MonoBehaviour:
   videoFileName: VALDIVIA 360 14.mp4
   autoPlay: 0
   volume: 1
-  playPauseButton: 1
-  restartButton: 2
+  playPauseButton: 8192
+  restartButton: 2097152
 --- !u!1 &1197610769
 GameObject:
   m_ObjectHideFlags: 0
