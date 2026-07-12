@@ -13,6 +13,8 @@ public class WebSocketSender : MonoBehaviour
     public string serverUrl = "ws://10.33.0.137:8010";
     // public string serverUrl = "wss://uandes-rcptraining.onrender.com";
     public string vrName = "VR UANDES";
+    [Tooltip("Deja vacío para usar SystemInfo.deviceUniqueIdentifier automáticamente")]
+    public string machineId = "";
 
     [Header("Control de Video")]
     public VideoLibraryManager videoLibrary;
@@ -174,7 +176,8 @@ public class WebSocketSender : MonoBehaviour
                 }
                 isConnected = true;
 
-                var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName, machine_id = SystemInfo.deviceUniqueIdentifier };
+                var effectiveMachineId = string.IsNullOrWhiteSpace(machineId) ? SystemInfo.deviceUniqueIdentifier : machineId;
+                var registerMsg = new VRRegisterMessage { type = "REGISTER", role = "vr", name = vrName, machine_id = effectiveMachineId };
                 await SendTextAsync(JsonUtility.ToJson(registerMsg));
                 Debug.Log($"[WSSender] WebSocket de sesión conectado (intento {attempt + 1}).");
 
