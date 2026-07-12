@@ -389,7 +389,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: -100, y: 100, z: 100}
+  m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -415,9 +415,9 @@ MonoBehaviour:
   - MIX_TRICAO+PLAYAS.mp4
   - stroop_congruente.mp4
   - stroop_incongruente.mp4
-  - stroop.mp4
-  - flankers.mp4
-  - go_no_go.mp4
+  - Stroop.mp4
+  - Flankers.mp4
+  - GoNoGo.mp4
   autoPlayFirst: 0
 --- !u!114 &24884547
 MonoBehaviour:
@@ -1245,6 +1245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   serverUrl: wss://jacinta-rcp-backend.onrender.com
   vrName: VR UANDES
+  machineId: vr1
   videoLibrary: {fileID: 24884546}
   minimumValueThreshold: 0.001
 --- !u!114 &1090165264
