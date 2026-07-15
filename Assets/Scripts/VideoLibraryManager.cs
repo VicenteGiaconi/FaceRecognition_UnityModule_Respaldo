@@ -14,15 +14,12 @@ public class VideoLibraryManager : MonoBehaviour
     [Tooltip("Lista de nombres de archivos .mp4 en Assets/StreamingAssets/")]
     public string[] knownVideos = {
         "VALDIVIA.mp4",
-        "AUCKLAND.mp4",
+        "AUCKLAND.mp4", 
         "LITORAL_CENTRAL.mp4",
         "TRICAO.mp4",
         "MIX_TRICAO+PLAYAS.mp4",
         "stroop_congruente.mp4",
-        "stroop_incongruente.mp4",
-        "Stroop.mp4",
-        "Flankers.mp4",
-        "GoNoGo.mp4"
+        "stroop_incongruente.mp4"
     };
 
     [Tooltip("Reproducir el primer video al iniciar (false = esperar señal del frontend)")]
